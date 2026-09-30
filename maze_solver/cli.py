@@ -92,9 +92,7 @@ def compare_heuristics(path: Path, show_explored: bool = False, show_comparison:
     except (OSError, MazeFormatError) as error:
         print(f"Error: {error}")
         return
-    print("\nHeuristic comparison")
-    print(f"{'Method':<30} {'Path':>8} {'Explored':>10} {'Time (ms)':>12}")
-    print("-" * 66)
+    performance_rows = []
     comparison_rows = []
     for mode in ("manhattan", "euclidean", "dijkstra"):
         heuristic, name = _heuristic_for(mode)
@@ -102,7 +100,7 @@ def compare_heuristics(path: Path, show_explored: bool = False, show_comparison:
         result = astar_search(maze, heuristic)
         elapsed_ms = (time.perf_counter() - start_time) * 1000
         path_length = str(result.cost) if result.found else "none"
-        print(f"{name:<30} {path_length:>8} {len(result.explored):>10} {elapsed_ms:>12.3f}")
+        performance_rows.append((name, path_length, len(result.explored), elapsed_ms))
         if show_comparison and result.found:
             explored = result.explored if show_explored else None
         comparison_rows.append((name, maze.render(result.path, explored)))
@@ -112,6 +110,11 @@ def compare_heuristics(path: Path, show_explored: bool = False, show_comparison:
             print(f"\n{name}")
             print("-" * len(name))
             print(rendered_maze)
+    print("\nHeuristic comparison statistics")
+    print(f"{'Method':<30} {'Path':>8} {'Explored':>10} {'Time (ms)':>12}")
+    print("-" * 66)
+    for name, path_length, explored_count, elapsed_ms in performance_rows:
+        print(f"{name:<30} {path_length:>8} {explored_count:>10} {elapsed_ms:>12.3f}")
 
 
 def _maze_files(directory: Path) -> list[Path]:
