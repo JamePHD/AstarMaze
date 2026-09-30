@@ -59,14 +59,24 @@ def _heuristic_for(mode: str):
     }[mode]
 
 
-def _choose_solver_mode() -> str:
-    print("\nChoose solving method:")
-    print("1. Manhattan distance (recommended)")
-    print("2. Euclidean distance")
-    print("3. Zero heuristic / Dijkstra")
-    print("4. Compare all three")
-    choice = input("Select an option [1]: ").strip() or "1"
-    return {"1": "manhattan", "2": "euclidean", "3": "dijkstra", "4": "compare"}.get(choice, "manhattan")
+def _choose_solver_mode() -> str | None:
+    options = {
+        "1": "manhattan",
+        "2": "euclidean",
+        "3": "dijkstra",
+        "4": "compare",
+    }
+    while True:
+        print("\nChoose solving method:")
+        print("1. Manhattan distance (default)")
+        print("2. Euclidean distance")
+        print("3. Zero heuristic / Dijkstra")
+        print("4. Compare all three")
+        choice = input("Select an option [1]: ").strip() or "1"
+        if choice in options:
+            return options[choice]
+        print("Invalid choice. Returning to the main menu.")
+        return None
 
 
 def compare_heuristics(path: Path, show_explored: bool = False) -> None:
@@ -133,6 +143,8 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
                 print("Maze was not solved.")
                 continue
             mode = _choose_solver_mode()
+            if mode is None:
+                continue
             if mode == "compare":
                 compare_heuristics(path, show_explored)
                 input("\nPress Enter to return to the menu...")
