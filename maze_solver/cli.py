@@ -44,13 +44,21 @@ def solve_file(path: Path, show_explored: bool = False, stats: bool = False, deb
     else:
         print("\nNo path found.")
     if stats:
-        print(f"Cells explored: {len(result.explored)}")
-        print(f"Frontier nodes processed: {result.frontier_nodes_processed}")
-        print(f"Runtime: {elapsed_ms:.3f} ms")
-        print(f"Heuristic: {heuristic_name}")
+        path_length = str(result.cost) if result.found else "none"
+        print("\nSearch statistics")
+        print(f"{'Metric':<28} {'Value':>12}")
+        print("-" * 42)
+        print(f"{'Path length (moves)':<28} {path_length:>12}")
+        print(f"{'Cells explored':<28} {len(result.explored):>12}")
+        print(f"{'Frontier nodes processed':<28} {result.frontier_nodes_processed:>12}")
+        print(f"{'Runtime (ms)':<28} {elapsed_ms:>12.3f}")
+        print(f"{'Heuristic':<28} {heuristic_name:>12}")
     if debug:
         walls = sum(row.count("#") for row in maze.rows)
         walkable = maze.height * maze.width - walls
+        print("\n" + "=" * 42)
+        print("Debug information")
+        print("=" * 42)
         print(f"Start: {maze.start}")
         print(f"Goal: {maze.goal}")
         print(f"Walls: {walls}")
@@ -122,7 +130,9 @@ def compare_heuristics(path: Path, show_explored: bool = False, show_comparison:
     if debug:
         walls = sum(row.count("#") for row in maze.rows)
         walkable = maze.height * maze.width - walls
-        print("\nDebug details")
+        print("\n" + "=" * 66)
+        print("Debug information")
+        print("=" * 66)
         print(f"Dimensions: {maze.width} x {maze.height}")
         print(f"Start: {maze.start}")
         print(f"Goal: {maze.goal}")
