@@ -62,7 +62,7 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
         print("================================")
         print("1. Solve a maze")
         print("2. Create a maze")
-        print("3. List available mazes")
+        print("3. View available mazes")
         print("4. Settings")
         print("5. Exit")
         choice = input("\nSelect an option: ").strip()
@@ -100,8 +100,7 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
         elif choice == "2":
             create_maze(maze_directory)
         elif choice == "3":
-            files = _maze_files(maze_directory)
-            print("\n" + ("\n".join(f"- {path.name}" for path in files) if files else "No maze files found."))
+            view_available_mazes(maze_directory)
         elif choice == "4":
             show_explored = _ask_yes_no("Show explored cells", show_explored)
             show_stats = _ask_yes_no("Show statistics", show_stats)
@@ -159,6 +158,48 @@ def create_maze(maze_directory: Path) -> None:
     output_path.write_text("\n".join(maze.rows) + "\n", encoding="utf-8")
     print(f"Maze saved to {output_path}")
     print(f"It contains a solvable route of {result.cost} moves.")
+
+
+def view_available_mazes(maze_directory: Path) -> None:
+    """List saved mazes, then show details and a preview for one selection."""
+    files = _maze_files(maze_directory)
+    if not files:
+        print("\nNo maze files found.")
+        return
+
+    print("\nAvailable mazes")
+    print("-" * 24)
+    for index, path in enumerate(files, start=1):
+        print(f"{index}. {path.name}")
+
+    selected = input("\nEnter a maze number to view, or press Enter to return: ").strip()
+    if not selected:
+        return
+    try:
+        path = files[int(selected) - 1]
+    except (ValueError, IndexError):
+        print("Invalid maze selection.")
+        return
+    try:
+        maze = Maze.from_file(path)
+        result = astar_search(maze)
+        walls = sum(row.count("#") for row in maze.rows)
+        walkable = maze.height * maze.width - walls
+        route = f"yes ({result.cost} moves)" if result.found else "no"
+        print(f"\nMaze details: {path.name}")
+        print(f"Dimensions: {maze.width} x {maze.height}")
+        print(f"Walls: {walls}")
+        print(f"Walkable cells: {walkable}")
+        print(f"Start: {maze.start}    Goal: {maze.goal}")
+        print(f"Solvable: {route}\n")
+    except (OSError, MazeFormatError) as error:
+        print(f"\nStatus: invalid maze ({error})\n")
+    try:
+        print(f"Preview: {path.name}\n")
+        print(path.read_text(encoding="utf-8"))
+    except OSError as error:
+        print(f"Error reading maze: {error}")
+    input("\nPress Enter to return to the menu...")
 
 
 def _ask_yes_no(label: str, current: bool) -> bool:
