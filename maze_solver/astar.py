@@ -16,6 +16,7 @@ class SearchResult:
     path: list[Position] | None
     explored: set[Position]
     cost: int | None
+    frontier_nodes_processed: int
 
     @property
     def found(self) -> bool:
@@ -57,16 +58,23 @@ def astar_search(maze: Maze, heuristic: Callable[[Position, Position], float] = 
     came_from: dict[Position, Position] = {}
     cost_so_far = {start: 0}
     explored: set[Position] = set()
+    frontier_nodes_processed = 0
 
     while frontier:
         _, _, current = heapq.heappop(frontier)
+        frontier_nodes_processed += 1
         if current in explored:
             continue
         explored.add(current)
 
         if current == goal:
             path = _reconstruct_path(came_from, current)
-            return SearchResult(path=path, explored=explored, cost=len(path) - 1)
+            return SearchResult(
+                path=path,
+                explored=explored,
+                cost=len(path) - 1,
+                frontier_nodes_processed=frontier_nodes_processed,
+            )
 
         for neighbour in maze.neighbours(current):
             new_cost = cost_so_far[current] + 1
@@ -76,4 +84,9 @@ def astar_search(maze: Maze, heuristic: Callable[[Position, Position], float] = 
                 priority = new_cost + heuristic(neighbour, goal)
                 heapq.heappush(frontier, (priority, next(tie_breaker), neighbour))
 
-    return SearchResult(path=None, explored=explored, cost=None)
+    return SearchResult(
+        path=None,
+        explored=explored,
+        cost=None,
+        frontier_nodes_processed=frontier_nodes_processed,
+    )

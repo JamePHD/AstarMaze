@@ -35,7 +35,9 @@ def solve_file(path: Path, show_explored: bool = False, stats: bool = False, deb
         return False
 
     heuristic, heuristic_name = _heuristic_for(mode)
+    start_time = time.perf_counter()
     result = astar_search(maze, heuristic)
+    elapsed_ms = (time.perf_counter() - start_time) * 1000
     print(maze.render(result.path, result.explored if show_explored else None))
     if result.found:
         print(f"\nPath found: {result.cost} moves")
@@ -43,6 +45,9 @@ def solve_file(path: Path, show_explored: bool = False, stats: bool = False, deb
         print("\nNo path found.")
     if stats:
         print(f"Cells explored: {len(result.explored)}")
+        print(f"Frontier nodes processed: {result.frontier_nodes_processed}")
+        print(f"Runtime: {elapsed_ms:.3f} ms")
+        print(f"Heuristic: {heuristic_name}")
     if debug:
         print(f"Start: {maze.start}")
         print(f"Goal: {maze.goal}")
@@ -81,7 +86,7 @@ def _choose_solver_mode() -> str | None:
     return None
 
 
-def compare_heuristics(path: Path, show_explored: bool = False) -> None:
+def compare_heuristics(path: Path, show_explored: bool = False, show_comparison: bool = True) -> None:
     try:
         maze = Maze.from_file(path)
     except (OSError, MazeFormatError) as error:
@@ -97,8 +102,9 @@ def compare_heuristics(path: Path, show_explored: bool = False) -> None:
         elapsed_ms = (time.perf_counter() - start_time) * 1000
         path_length = str(result.cost) if result.found else "none"
         print(f"{name:<30} {path_length:>8} {len(result.explored):>10} {elapsed_ms:>12.3f}")
-        if show_explored and result.found:
-            print(f"\n{name} route:\n{maze.render(result.path, result.explored)}\n")
+        if show_comparison and result.found:
+            explored = result.explored if show_explored else None
+            print(f"\n{name} route:\n{maze.render(result.path, explored)}\n")
 
 
 def _maze_files(directory: Path) -> list[Path]:
@@ -107,7 +113,7 @@ def _maze_files(directory: Path) -> list[Path]:
 
 def interactive_menu(maze_directory: Path | None = None) -> None:
     maze_directory = maze_directory or Path("mazes")
-    show_explored, show_stats, debug = False, True, False
+    show_explored, show_stats, debug, show_comparison = True, True, False, True
     while True:
         print("\n================================")
         print("          A* MAZE SOLVER")
@@ -148,7 +154,7 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
             if mode is None:
                 continue
             if mode == "compare":
-                compare_heuristics(path, show_explored)
+                compare_heuristics(path, show_explored, show_comparison)
                 input("\nPress Enter to return to the menu...")
                 continue
             print(f"\nSolving {path.name}...\n")
@@ -161,7 +167,9 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
         elif choice == "3":
             view_available_mazes(maze_directory)
         elif choice == "4":
-            show_explored, show_stats, debug = settings_menu(show_explored, show_stats, debug)
+            show_explored, show_stats, debug, show_comparison = settings_menu(
+                show_explored, show_stats, debug, show_comparison
+            )
         elif choice == "5":
             print("Goodbye!")
             return
@@ -279,38 +287,34 @@ def _ask_yes_no(label: str, current: bool) -> bool:
     return current if not answer else answer in {"y", "yes"}
 
 
-def settings_menu(show_explored: bool, show_stats: bool, debug: bool) -> tuple[bool, bool, bool]:
+def settings_menu(show_explored: bool, show_stats: bool, debug: bool, show_comparison: bool) -> tuple[bool, bool, bool, bool]:
     """Display and optionally update interactive solver settings."""
     while True:
         print("\nCurrent settings:")
         print(f"1. Show explored cells: {'ON' if show_explored else 'OFF'}")
         print(f"2. Show statistics: {'ON' if show_stats else 'OFF'}")
         print(f"3. Debug details: {'ON' if debug else 'OFF'}")
-        answer = input("Change a setting? [Y/n], or B to go back: ").strip().lower()
-        if answer in {"n", "no", "b"}:
-            return show_explored, show_stats, debug
-        if answer not in {"", "y", "yes"}:
-            print("Invalid choice. Returning to the main menu.")
-            return show_explored, show_stats, debug
-
+        print(f"4. Show comparison maze results: {'ON' if show_comparison else 'OFF'}")
         setting = input("Enter setting number to change, or B to go back: ").strip().lower()
         if setting == "b":
-            return show_explored, show_stats, debug
-        if setting not in {"1", "2", "3"}:
+            return show_explored, show_stats, debug, show_comparison
+        if setting not in {"1", "2", "3", "4"}:
             print("Invalid setting. Returning to the main menu.")
-            return show_explored, show_stats, debug
+            return show_explored, show_stats, debug, show_comparison
 
-        labels = {"1": "Show explored cells", "2": "Show statistics", "3": "Debug details"}
-        values = {"1": show_explored, "2": show_stats, "3": debug}
+        labels = {"1": "Show explored cells", "2": "Show statistics", "3": "Debug details", "4": "Show comparison maze results"}
+        values = {"1": show_explored, "2": show_stats, "3": debug, "4": show_comparison}
         result = _ask_setting_value(labels[setting], values[setting])
         if result is None:
-            return show_explored, show_stats, debug
+            return show_explored, show_stats, debug, show_comparison
         if setting == "1":
             show_explored = result
         elif setting == "2":
             show_stats = result
         else:
             debug = result
+        if setting == "4":
+            show_comparison = result
         print("Setting updated.")
 
 
