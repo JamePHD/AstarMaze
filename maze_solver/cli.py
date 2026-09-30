@@ -161,9 +161,7 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
         elif choice == "3":
             view_available_mazes(maze_directory)
         elif choice == "4":
-            show_explored = _ask_yes_no("Show explored cells", show_explored)
-            show_stats = _ask_yes_no("Show statistics", show_stats)
-            debug = _ask_yes_no("Enable debug details", debug)
+            show_explored, show_stats, debug = settings_menu(show_explored, show_stats, debug)
         elif choice == "5":
             print("Goodbye!")
             return
@@ -275,6 +273,56 @@ def _ask_yes_no(label: str, current: bool) -> bool:
     default = "Y/n" if current else "y/N"
     answer = input(f"{label}? [{default}]: ").strip().lower()
     return current if not answer else answer in {"y", "yes"}
+
+
+def settings_menu(show_explored: bool, show_stats: bool, debug: bool) -> tuple[bool, bool, bool]:
+    """Display and optionally update interactive solver settings."""
+    while True:
+        print("\nCurrent settings:")
+        print(f"1. Show explored cells: {'ON' if show_explored else 'OFF'}")
+        print(f"2. Show statistics: {'ON' if show_stats else 'OFF'}")
+        print(f"3. Debug details: {'ON' if debug else 'OFF'}")
+        answer = input("Change a setting? [Y/n], or B to go back: ").strip().lower()
+        if answer in {"n", "no", "b"}:
+            return show_explored, show_stats, debug
+        if answer not in {"", "y", "yes"}:
+            print("Invalid choice. Returning to the main menu.")
+            return show_explored, show_stats, debug
+
+        setting = input("Enter setting number to change, or B to go back: ").strip().lower()
+        if setting == "b":
+            return show_explored, show_stats, debug
+        if setting not in {"1", "2", "3"}:
+            print("Invalid setting. Returning to the main menu.")
+            return show_explored, show_stats, debug
+
+        labels = {"1": "Show explored cells", "2": "Show statistics", "3": "Debug details"}
+        values = {"1": show_explored, "2": show_stats, "3": debug}
+        result = _ask_setting_value(labels[setting], values[setting])
+        if result is None:
+            return show_explored, show_stats, debug
+        if setting == "1":
+            show_explored = result
+        elif setting == "2":
+            show_stats = result
+        else:
+            debug = result
+        print("Setting updated.")
+
+
+def _ask_setting_value(label: str, current: bool) -> bool | None:
+    default = "Y/n" if current else "y/N"
+    answer = input(f"{label}? [{default}], or B to go back: ").strip().lower()
+    if answer == "b":
+        return None
+    if not answer:
+        return current
+    if answer in {"y", "yes"}:
+        return True
+    if answer in {"n", "no"}:
+        return False
+    print("Invalid choice. Returning to the main menu.")
+    return None
 
 
 if __name__ == "__main__":
