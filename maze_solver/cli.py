@@ -82,6 +82,16 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
             except (ValueError, IndexError):
                 print("Invalid maze selection.")
                 continue
+            print(f"\nSelected maze: {path.name}\n")
+            try:
+                print(path.read_text(encoding="utf-8"))
+            except OSError as error:
+                print(f"Error reading maze: {error}")
+                input("\nPress Enter to return to the menu...")
+                continue
+            if not _ask_yes_no("Solve this maze", True):
+                print("Maze was not solved.")
+                continue
             print(f"\nSolving {path.name}...\n")
             try:
                 solve_file(path, show_explored, show_stats, debug)
