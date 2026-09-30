@@ -22,15 +22,16 @@ def main(argv: list[str] | None = None) -> None:
     if args.maze is None:
         interactive_menu()
         return
-    solve_file(args.maze, args.show_explored, args.stats, args.debug)
+    if not solve_file(args.maze, args.show_explored, args.stats, args.debug):
+        raise SystemExit(2)
 
 
-def solve_file(path: Path, show_explored: bool = False, stats: bool = False, debug: bool = False) -> None:
+def solve_file(path: Path, show_explored: bool = False, stats: bool = False, debug: bool = False) -> bool:
     try:
         maze = Maze.from_file(path)
     except (OSError, MazeFormatError) as error:
         print(f"Error: {error}", file=sys.stderr)
-        raise SystemExit(2)
+        return False
 
     result = astar_search(maze)
     print(maze.render(result.path, result.explored if show_explored else None))
@@ -45,6 +46,7 @@ def solve_file(path: Path, show_explored: bool = False, stats: bool = False, deb
         print(f"Goal: {maze.goal}")
         print("Heuristic: Manhattan distance")
         print(f"Search result: {'success' if result.found else 'failure'}")
+    return True
 
 
 def _maze_files(directory: Path) -> list[Path]:
@@ -80,8 +82,10 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
                 print("Invalid maze selection.")
                 continue
             print(f"\nSolving {path.name}...\n")
-            solve_file(path, show_explored, show_stats, debug)
-            input("\nPress Enter to return to the menu...")
+            try:
+                solve_file(path, show_explored, show_stats, debug)
+            finally:
+                input("\nPress Enter to return to the menu...")
         elif choice == "2":
             files = _maze_files(maze_directory)
             print("\n" + ("\n".join(f"- {path.name}" for path in files) if files else "No maze files found."))
