@@ -30,6 +30,10 @@ python -m maze_solver
 The menu lets you choose a maze, list available maze files, and change display,
 statistics, and debugging settings.
 
+It also includes a maze creator. The creator accepts both square and rectangular
+dimensions, validates the rows and required maze symbols, checks that `S` can
+reach `E`, and saves valid mazes in the `mazes` folder.
+
 For scripted use, provide a maze path directly:
 
 From the repository root:

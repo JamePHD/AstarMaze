@@ -61,9 +61,10 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
         print("          A* MAZE SOLVER")
         print("================================")
         print("1. Solve a maze")
-        print("2. List available mazes")
-        print("3. Settings")
-        print("4. Exit")
+        print("2. Create a maze")
+        print("3. List available mazes")
+        print("4. Settings")
+        print("5. Exit")
         choice = input("\nSelect an option: ").strip()
         if choice == "1":
             files = _maze_files(maze_directory)
@@ -87,17 +88,67 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
             finally:
                 input("\nPress Enter to return to the menu...")
         elif choice == "2":
+            create_maze(maze_directory)
+        elif choice == "3":
             files = _maze_files(maze_directory)
             print("\n" + ("\n".join(f"- {path.name}" for path in files) if files else "No maze files found."))
-        elif choice == "3":
+        elif choice == "4":
             show_explored = _ask_yes_no("Show explored cells", show_explored)
             show_stats = _ask_yes_no("Show statistics", show_stats)
             debug = _ask_yes_no("Enable debug details", debug)
-        elif choice == "4":
+        elif choice == "5":
             print("Goodbye!")
             return
         else:
-            print("Please choose an option from 1 to 4.")
+            print("Please choose an option from 1 to 5.")
+
+
+def create_maze(maze_directory: Path) -> None:
+    """Interactively collect, validate, and save a user-created maze."""
+    print("\nCreate a maze")
+    print("Use # for walls, . for open cells, S for start, and E for goal.")
+    try:
+        height = int(input("Enter maze height: ").strip())
+        width = int(input("Enter maze width: ").strip())
+    except ValueError:
+        print("Height and width must be whole numbers.")
+        return
+    if height < 1 or width < 1:
+        print("Height and width must be positive.")
+        return
+
+    rows = []
+    for row_number in range(1, height + 1):
+        row = input(f"Enter row {row_number}/{height} ({width} characters): ").strip()
+        if len(row) != width:
+            print(f"Error: row {row_number} must contain exactly {width} characters.")
+            return
+        rows.append(row)
+
+    try:
+        maze = Maze.from_text("\n".join(rows))
+    except MazeFormatError as error:
+        print(f"Error: {error}")
+        return
+
+    result = astar_search(maze)
+    if not result.found:
+        print("Error: this maze has no route from S to E and was not saved.")
+        return
+
+    filename = input("Enter a name for the maze (without .txt): ").strip()
+    if not filename or any(character in filename for character in '/\\:*?"<>|'):
+        print("Error: please use a valid filename without path separators or special characters.")
+        return
+    output_path = maze_directory / f"{filename}.txt"
+    if output_path.exists():
+        if not _ask_yes_no("That file already exists. Overwrite it", False):
+            print("Maze was not saved.")
+            return
+    maze_directory.mkdir(parents=True, exist_ok=True)
+    output_path.write_text("\n".join(maze.rows) + "\n", encoding="utf-8")
+    print(f"Maze saved to {output_path}")
+    print(f"It contains a solvable route of {result.cost} moves.")
 
 
 def _ask_yes_no(label: str, current: bool) -> bool:
