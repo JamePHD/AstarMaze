@@ -21,6 +21,17 @@ Each maze must contain exactly one `S` and one `E`.
 
 ## Run it
 
+Start the interactive menu:
+
+```bash
+python -m maze_solver
+```
+
+The menu lets you choose a maze, list available maze files, and change display,
+statistics, and debugging settings.
+
+For scripted use, provide a maze path directly:
+
 From the repository root:
 
 ```bash
@@ -32,6 +43,8 @@ Useful options:
 ```bash
 python -m maze_solver mazes/example.txt --show-explored --stats
 ```
+
+Add `--debug` to display the start and goal coordinates, heuristic, and search result.
 
 The solver prints `*` for the final route, and optionally `,` for cells explored while searching.
 
