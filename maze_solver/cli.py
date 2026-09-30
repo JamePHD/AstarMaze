@@ -66,17 +66,19 @@ def _choose_solver_mode() -> str | None:
         "3": "dijkstra",
         "4": "compare",
     }
-    while True:
-        print("\nChoose solving method:")
-        print("1. Manhattan distance (default)")
-        print("2. Euclidean distance")
-        print("3. Zero heuristic / Dijkstra")
-        print("4. Compare all three")
-        choice = input("Select an option [1]: ").strip() or "1"
-        if choice in options:
-            return options[choice]
-        print("Invalid choice. Returning to the main menu.")
+    print("\nChoose solving method:")
+    print("1. Manhattan distance (default)")
+    print("2. Euclidean distance")
+    print("3. Zero heuristic / Dijkstra")
+    print("4. Compare all three")
+    choice = input("Select an option [1], or B to go back: ").strip().lower() or "1"
+    if choice == "b":
+        print("Returning to the main menu.")
         return None
+    if choice in options:
+        return options[choice]
+    print("Invalid choice. Returning to the main menu.")
+    return None
 
 
 def compare_heuristics(path: Path, show_explored: bool = False) -> None:
@@ -174,8 +176,14 @@ def create_maze(maze_directory: Path) -> None:
     print("\nCreate a maze")
     print("Use # for walls, . for open cells, S for start, and E for goal.")
     try:
-        height = int(input("Enter maze height: ").strip())
-        width = int(input("Enter maze width: ").strip())
+        height_input = input("Enter maze height, or B to go back: ").strip().lower()
+        if height_input == "b":
+            return
+        height = int(height_input)
+        width_input = input("Enter maze width, or B to go back: ").strip().lower()
+        if width_input == "b":
+            return
+        width = int(width_input)
     except ValueError:
         print("Height and width must be whole numbers.")
         return
@@ -185,7 +193,9 @@ def create_maze(maze_directory: Path) -> None:
 
     rows = []
     for row_number in range(1, height + 1):
-        row = input(f"Enter row {row_number}/{height} ({width} characters): ").strip()
+        row = input(f"Enter row {row_number}/{height} ({width} characters), or B to go back: ").strip()
+        if row.lower() == "b":
+            return
         if len(row) != width:
             print(f"Error: row {row_number} must contain exactly {width} characters.")
             return
@@ -202,7 +212,9 @@ def create_maze(maze_directory: Path) -> None:
         print("Error: this maze has no route from S to E and was not saved.")
         return
 
-    filename = input("Enter a name for the maze (without .txt): ").strip()
+    filename = input("Enter a name for the maze (without .txt), or B to go back: ").strip()
+    if filename.lower() == "b":
+        return
     if not filename or any(character in filename for character in '/\\:*?"<>|'):
         print("Error: please use a valid filename without path separators or special characters.")
         return
@@ -229,8 +241,8 @@ def view_available_mazes(maze_directory: Path) -> None:
     for index, path in enumerate(files, start=1):
         print(f"{index}. {path.name}")
 
-    selected = input("\nEnter a maze number to view, or press Enter to return: ").strip()
-    if not selected:
+    selected = input("\nEnter a maze number to view, or B to go back: ").strip().lower()
+    if not selected or selected == "b":
         return
     try:
         path = files[int(selected) - 1]
