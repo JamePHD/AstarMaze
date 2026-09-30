@@ -95,6 +95,7 @@ def compare_heuristics(path: Path, show_explored: bool = False, show_comparison:
     print("\nHeuristic comparison")
     print(f"{'Method':<30} {'Path':>8} {'Explored':>10} {'Time (ms)':>12}")
     print("-" * 66)
+    comparison_rows = []
     for mode in ("manhattan", "euclidean", "dijkstra"):
         heuristic, name = _heuristic_for(mode)
         start_time = time.perf_counter()
@@ -104,7 +105,16 @@ def compare_heuristics(path: Path, show_explored: bool = False, show_comparison:
         print(f"{name:<30} {path_length:>8} {len(result.explored):>10} {elapsed_ms:>12.3f}")
         if show_comparison and result.found:
             explored = result.explored if show_explored else None
-            print(f"\n{name} route:\n{maze.render(result.path, explored)}\n")
+            comparison_rows.append((name, maze.render(result.path, explored).splitlines()))
+    if comparison_rows:
+        print("\nComparison maze results")
+        print(f"{'Method':<30} | Maze")
+        print("-" * 66)
+        for name, maze_lines in comparison_rows:
+            for line_number, line in enumerate(maze_lines):
+                method = name if line_number == 0 else ""
+                print(f"{method:<30} | {line}")
+            print("-" * 66)
 
 
 def _maze_files(directory: Path) -> list[Path]:

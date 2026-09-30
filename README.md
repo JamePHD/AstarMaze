@@ -60,7 +60,7 @@ python -m maze_solver mazes/example.txt --show-explored --stats
 
 Add `--debug` to display the start and goal coordinates, heuristic, and search result.
 
-The solver prints `*` for the final route, and optionally `,` for cells explored while searching.
+The solver prints `o` for the final route, and optionally `x` for cells explored while searching.
 
 ## Run tests
 
