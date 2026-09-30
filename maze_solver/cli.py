@@ -3,8 +3,9 @@
 import argparse
 from pathlib import Path
 import sys
+import time
 
-from .astar import astar_search
+from .astar import astar_search, euclidean_distance, manhattan_distance, zero_heuristic
 from .maze import Maze, MazeFormatError
 
 
@@ -26,14 +27,15 @@ def main(argv: list[str] | None = None) -> None:
         raise SystemExit(2)
 
 
-def solve_file(path: Path, show_explored: bool = False, stats: bool = False, debug: bool = False) -> bool:
+def solve_file(path: Path, show_explored: bool = False, stats: bool = False, debug: bool = False, mode: str = "manhattan") -> bool:
     try:
         maze = Maze.from_file(path)
     except (OSError, MazeFormatError) as error:
         print(f"Error: {error}", file=sys.stderr)
         return False
 
-    result = astar_search(maze)
+    heuristic, heuristic_name = _heuristic_for(mode)
+    result = astar_search(maze, heuristic)
     print(maze.render(result.path, result.explored if show_explored else None))
     if result.found:
         print(f"\nPath found: {result.cost} moves")
@@ -44,9 +46,47 @@ def solve_file(path: Path, show_explored: bool = False, stats: bool = False, deb
     if debug:
         print(f"Start: {maze.start}")
         print(f"Goal: {maze.goal}")
-        print("Heuristic: Manhattan distance")
+        print(f"Heuristic: {heuristic_name}")
         print(f"Search result: {'success' if result.found else 'failure'}")
     return True
+
+
+def _heuristic_for(mode: str):
+    return {
+        "manhattan": (manhattan_distance, "Manhattan distance"),
+        "euclidean": (euclidean_distance, "Euclidean distance"),
+        "dijkstra": (zero_heuristic, "Zero heuristic (Dijkstra)"),
+    }[mode]
+
+
+def _choose_solver_mode() -> str:
+    print("\nChoose solving method:")
+    print("1. Manhattan distance (recommended)")
+    print("2. Euclidean distance")
+    print("3. Zero heuristic / Dijkstra")
+    print("4. Compare all three")
+    choice = input("Select an option [1]: ").strip() or "1"
+    return {"1": "manhattan", "2": "euclidean", "3": "dijkstra", "4": "compare"}.get(choice, "manhattan")
+
+
+def compare_heuristics(path: Path, show_explored: bool = False) -> None:
+    try:
+        maze = Maze.from_file(path)
+    except (OSError, MazeFormatError) as error:
+        print(f"Error: {error}")
+        return
+    print("\nHeuristic comparison")
+    print(f"{'Method':<30} {'Path':>8} {'Explored':>10} {'Time (ms)':>12}")
+    print("-" * 66)
+    for mode in ("manhattan", "euclidean", "dijkstra"):
+        heuristic, name = _heuristic_for(mode)
+        start_time = time.perf_counter()
+        result = astar_search(maze, heuristic)
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        path_length = str(result.cost) if result.found else "none"
+        print(f"{name:<30} {path_length:>8} {len(result.explored):>10} {elapsed_ms:>12.3f}")
+        if show_explored and result.found:
+            print(f"\n{name} route:\n{maze.render(result.path, result.explored)}\n")
 
 
 def _maze_files(directory: Path) -> list[Path]:
@@ -92,9 +132,14 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
             if not _ask_yes_no("Solve this maze", True):
                 print("Maze was not solved.")
                 continue
+            mode = _choose_solver_mode()
+            if mode == "compare":
+                compare_heuristics(path, show_explored)
+                input("\nPress Enter to return to the menu...")
+                continue
             print(f"\nSolving {path.name}...\n")
             try:
-                solve_file(path, show_explored, show_stats, debug)
+                solve_file(path, show_explored, show_stats, debug, mode)
             finally:
                 input("\nPress Enter to return to the menu...")
         elif choice == "2":

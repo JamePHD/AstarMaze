@@ -36,6 +36,10 @@ checks that `S` can reach `E`, and saves valid mazes in the `mazes` folder. The
 browser displays dimensions, wall and walkable-cell counts, route information,
 and a text preview.
 
+When solving interactively, the user can choose Manhattan distance, Euclidean
+distance, zero heuristic (Dijkstra's algorithm), or compare all three. The
+comparison reports path length, explored cells, and runtime.
+
 For scripted use, provide a maze path directly:
 
 From the repository root:
