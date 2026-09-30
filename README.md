@@ -77,11 +77,3 @@ f(n) = g(n) + h(n)
 ```
 
 where `g(n)` is the cost from the start and `h(n)` is Manhattan distance to the goal. Manhattan distance is admissible for this maze because diagonal movement is forbidden and every move costs one, so A* returns a shortest path when one exists.
-
-## Suggested extensions for the assignment
-
-- Add a `--heuristic` option and compare A* with Dijkstra's algorithm.
-- Add generated mazes and measure path length, explored cells, and runtime.
-- Support weighted terrain such as water or mud.
-- Add a step-by-step mode for the video walkthrough.
-- Explain the frontier, `g` scores, `came_from`, and heuristic in the report.
