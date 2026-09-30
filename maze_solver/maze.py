@@ -73,14 +73,14 @@ class Maze:
         return [candidate for candidate in candidates if self.is_open(candidate)]
 
     def render(self, path: list[Position] | None = None, explored: set[Position] | None = None) -> str:
-        """Return the maze, marking explored cells with x and the route with o."""
+        """Return the maze, marking explored cells with commas and the route with o."""
         output = [list(row) for row in self.rows]
         if explored:
             for row, column in explored:
                 if output[row][column] == ".":
-                    output[row][column] = "x"
+                    output[row][column] = ","
         if path:
             for row, column in path:
-                if output[row][column] in {".", "x"}:
+                if output[row][column] in {".", ","}:
                     output[row][column] = "o"
         return "\n".join("".join(row) for row in output)
