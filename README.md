@@ -36,6 +36,10 @@ checks that `S` can reach `E`, and saves valid mazes in the `mazes` folder. The
 browser displays dimensions, wall and walkable-cell counts, route information,
 and a text preview.
 
+The maze creator accepts dimensions from 1 to 100 in each direction. This limit
+applies only to newly created mazes; larger rectangular maze files can still be
+imported and solved.
+
 When solving interactively, the user can choose Manhattan distance, Euclidean
 distance, zero heuristic (Dijkstra's algorithm), or compare all three. The
 comparison reports path length, explored cells, and runtime.

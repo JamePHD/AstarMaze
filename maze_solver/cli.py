@@ -173,6 +173,7 @@ def create_maze(maze_directory: Path) -> None:
     """Interactively collect, validate, and save a user-created maze."""
     print("\nCreate a maze")
     print("Use # for walls, . for open cells, S for start, and E for goal.")
+    print("New maze dimensions have a maximum of 100; larger mazes can be imported instead.")
     try:
         height_input = input("Enter maze height, or B to go back: ").strip().lower()
         if height_input == "b":
@@ -187,6 +188,9 @@ def create_maze(maze_directory: Path) -> None:
         return
     if height < 1 or width < 1:
         print("Height and width must be positive.")
+        return
+    if height > 100 or width > 100:
+        print("Height and width cannot be greater than 100.")
         return
 
     rows = []
