@@ -105,16 +105,13 @@ def compare_heuristics(path: Path, show_explored: bool = False, show_comparison:
         print(f"{name:<30} {path_length:>8} {len(result.explored):>10} {elapsed_ms:>12.3f}")
         if show_comparison and result.found:
             explored = result.explored if show_explored else None
-            comparison_rows.append((name, maze.render(result.path, explored).splitlines()))
+        comparison_rows.append((name, maze.render(result.path, explored)))
     if comparison_rows:
         print("\nComparison maze results")
-        print(f"{'Method':<30} | Maze")
-        print("-" * 66)
-        for name, maze_lines in comparison_rows:
-            for line_number, line in enumerate(maze_lines):
-                method = name if line_number == 0 else ""
-                print(f"{method:<30} | {line}")
-            print("-" * 66)
+        for name, rendered_maze in comparison_rows:
+            print(f"\n{name}")
+            print("-" * len(name))
+            print(rendered_maze)
 
 
 def _maze_files(directory: Path) -> list[Path]:

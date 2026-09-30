@@ -81,6 +81,6 @@ class Maze:
                     output[row][column] = "x"
         if path:
             for row, column in path:
-                if output[row][column] == ".":
+                if output[row][column] in {".", "x"}:
                     output[row][column] = "o"
         return "\n".join("".join(row) for row in output)
