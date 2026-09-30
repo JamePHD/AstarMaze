@@ -73,7 +73,11 @@ class Maze:
         return [candidate for candidate in candidates if self.is_open(candidate)]
 
     def render(self, path: list[Position] | None = None, explored: set[Position] | None = None) -> str:
-        """Return the maze, marking explored cells with commas and the route with o."""
+        """Return a display version of the maze.
+
+        Internally, ``.`` continues to represent a walkable cell.  For
+        readability, unexplored walkable cells are rendered as whitespace.
+        """
         output = [list(row) for row in self.rows]
         if explored:
             for row, column in explored:
@@ -83,4 +87,8 @@ class Maze:
             for row, column in path:
                 if output[row][column] in {".", ","}:
                     output[row][column] = "o"
+        for row in output:
+            for column, cell in enumerate(row):
+                if cell == ".":
+                    row[column] = " "
         return "\n".join("".join(row) for row in output)

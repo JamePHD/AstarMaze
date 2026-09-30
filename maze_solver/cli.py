@@ -49,8 +49,12 @@ def solve_file(path: Path, show_explored: bool = False, stats: bool = False, deb
         print(f"Runtime: {elapsed_ms:.3f} ms")
         print(f"Heuristic: {heuristic_name}")
     if debug:
+        walls = sum(row.count("#") for row in maze.rows)
+        walkable = maze.height * maze.width - walls
         print(f"Start: {maze.start}")
         print(f"Goal: {maze.goal}")
+        print(f"Walls: {walls}")
+        print(f"Walkable cells: {walkable}")
         print(f"Heuristic: {heuristic_name}")
         print(f"Search result: {'success' if result.found else 'failure'}")
     return True
@@ -86,7 +90,7 @@ def _choose_solver_mode() -> str | None:
     return None
 
 
-def compare_heuristics(path: Path, show_explored: bool = False, show_comparison: bool = True) -> None:
+def compare_heuristics(path: Path, show_explored: bool = False, show_comparison: bool = True, debug: bool = False) -> None:
     try:
         maze = Maze.from_file(path)
     except (OSError, MazeFormatError) as error:
@@ -115,6 +119,15 @@ def compare_heuristics(path: Path, show_explored: bool = False, show_comparison:
     print("-" * 66)
     for name, path_length, explored_count, elapsed_ms in performance_rows:
         print(f"{name:<30} {path_length:>8} {explored_count:>10} {elapsed_ms:>12.3f}")
+    if debug:
+        walls = sum(row.count("#") for row in maze.rows)
+        walkable = maze.height * maze.width - walls
+        print("\nDebug details")
+        print(f"Dimensions: {maze.width} x {maze.height}")
+        print(f"Start: {maze.start}")
+        print(f"Goal: {maze.goal}")
+        print(f"Walls: {walls}")
+        print(f"Walkable cells: {walkable}")
 
 
 def _maze_files(directory: Path) -> list[Path]:
@@ -152,11 +165,27 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
                 continue
             print(f"\nSelected maze: {path.name}\n")
             try:
-                print(path.read_text(encoding="utf-8"))
+                selected_maze = Maze.from_file(path)
+                print(selected_maze.render())
+                if debug:
+                    walls = sum(row.count("#") for row in selected_maze.rows)
+                    walkable = selected_maze.height * selected_maze.width - walls
+                    print("\nDebug details")
+                    print(f"Dimensions: {selected_maze.width} x {selected_maze.height}")
+                    print(f"Start: {selected_maze.start}")
+                    print(f"Goal: {selected_maze.goal}")
+                    print(f"Walls: {walls}")
+                    print(f"Walkable cells: {walkable}")
             except OSError as error:
                 print(f"Error reading maze: {error}")
                 input("\nPress Enter to return to the menu...")
                 continue
+            except MazeFormatError as error:
+                print(f"Error: {error}")
+                try:
+                    print(path.read_text(encoding="utf-8"))
+                except OSError as read_error:
+                    print(f"Error reading maze: {read_error}")
             if not _ask_yes_no("Solve this maze", True):
                 print("Maze was not solved.")
                 continue
@@ -164,7 +193,7 @@ def interactive_menu(maze_directory: Path | None = None) -> None:
             if mode is None:
                 continue
             if mode == "compare":
-                compare_heuristics(path, show_explored, show_comparison)
+                compare_heuristics(path, show_explored, show_comparison, debug)
                 input("\nPress Enter to return to the menu...")
                 continue
             print(f"\nSolving {path.name}...\n")
@@ -275,17 +304,17 @@ def view_available_mazes(maze_directory: Path) -> None:
         walls = sum(row.count("#") for row in maze.rows)
         walkable = maze.height * maze.width - walls
         route = f"yes ({result.cost} moves)" if result.found else "no"
+    except (OSError, MazeFormatError) as error:
+        print(f"\nStatus: invalid maze ({error})\n")
+    try:
+        print(f"Preview: {path.name}\n")
+        print(maze.render())
         print(f"\nMaze details: {path.name}")
         print(f"Dimensions: {maze.width} x {maze.height}")
         print(f"Walls: {walls}")
         print(f"Walkable cells: {walkable}")
         print(f"Start: {maze.start}    Goal: {maze.goal}")
-        print(f"Solvable: {route}\n")
-    except (OSError, MazeFormatError) as error:
-        print(f"\nStatus: invalid maze ({error})\n")
-    try:
-        print(f"Preview: {path.name}\n")
-        print(path.read_text(encoding="utf-8"))
+        print(f"Solvable: {route}")
     except OSError as error:
         print(f"Error reading maze: {error}")
     input("\nPress Enter to return to the menu...")
